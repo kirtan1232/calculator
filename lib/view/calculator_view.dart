@@ -33,72 +33,21 @@ class _CalculatorViewState extends State<CalculatorView> {
   ];
 
   final _key = GlobalKey<FormState>();
-  String displayText = ""; // To hold the current input/output value
-  String previousText = ""; // For saving the previous input for operations
-  String operation = ""; // To store the current operation (like +, -, *, /)
-
-  void _handleButtonPress(String value) {
-    setState(() {
-      if (value == "C") {
-        displayText = ""; // Clear the input
-      } else if (value == "<-") {
-        if (displayText.isNotEmpty) {
-          displayText = displayText.substring(0, displayText.length - 1); // Backspace
-        }
-      } else if (value == "=") {
-        _evaluateExpression(); // Evaluate the final expression
-      } else if (value == "+" || value == "-" || value == "*" || value == "/" || value == "%") {
-        if (displayText.isNotEmpty) {
-          previousText = displayText; // Save the current number
-          displayText = ""; // Reset displayText for next number
-          operation = value; // Set the operation
-        }
-      } else {
-        displayText += value; // Add the number or symbol to the display
-      }
-      _textController.text = displayText; // Update the text field
-    });
-  }
-
-  void _evaluateExpression() {
-    if (previousText.isNotEmpty && displayText.isNotEmpty && operation.isNotEmpty) {
-      double num1 = double.tryParse(previousText) ?? 0.0;
-      double num2 = double.tryParse(displayText) ?? 0.0;
-      double result;
-
-      // Perform calculation based on the operation
-      switch (operation) {
-        case "+":
-          result = num1 + num2;
-          break;
-        case "-":
-          result = num1 - num2;
-          break;
-        case "*":
-          result = num1 * num2;
-          break;
-        case "/":
-          result = num2 != 0 ? num1 / num2 : 0.0; // Avoid division by zero
-          break;
-        case "%":
-          result = num1 % num2;
-          break;
-        default:
-          result = 0.0;
-          break;
-      }
-
-      displayText = result.toString(); // Display the result
-      operation = ""; // Clear the operation
-      previousText = ""; // Reset the previous number
-    }
-  }
+  double firstNumber = 0;
+  double secondNumber = 0;
+  String operation = "";
+  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kirtan Calculator App'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Kirtan Calculator App',
+          style: TextStyle(fontSize: 30),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -116,8 +65,6 @@ class _CalculatorViewState extends State<CalculatorView> {
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
                 ),
-                readOnly: true, // Make the text field read-only
-                textAlign: TextAlign.right, // Align text to the right
               ),
               const SizedBox(
                 height: 8,
@@ -135,10 +82,62 @@ class _CalculatorViewState extends State<CalculatorView> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amber,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: () => _handleButtonPress(lstSymbols[index]),
+                      onPressed: () {
+                        String symbol = lstSymbols[index];
+                      if (symbol == "C") {
+                        _textController.text = "";
+                        firstNumber = 0;
+                        secondNumber = 0;
+                        operation = "";
+                      } else if (symbol == "<-") {
+                        if (_textController.text.isNotEmpty) {
+                          _textController.text = _textController.text
+                              .substring(0, _textController.text.length - 1);
+                        }
+                      } else if (symbol == "+" ||
+                          symbol == "-" ||
+                          symbol == "*" ||
+                          symbol == "/" ||
+                          symbol == "%") {
+                        if (_textController.text.isNotEmpty) {
+                          firstNumber = double.parse(_textController.text);
+                          operation = symbol;
+                          _textController.text = "";
+                        }
+                      } else if (symbol == "=") {
+                        if (_textController.text.isNotEmpty &&
+                            operation.isNotEmpty) {
+                          secondNumber = double.parse(_textController.text);
+                          double result = 0;
+                          switch (operation) {
+                            case "+":
+                              result = firstNumber + secondNumber;
+                              break;
+                            case "-":
+                              result = firstNumber - secondNumber;
+                              break;
+                            case "*":
+                              result = firstNumber * secondNumber;
+                              break;
+                            case "/":
+                              result = secondNumber != 0
+                                  ? firstNumber / secondNumber
+                                  : double.nan;
+                              break;
+                            case "%":
+                              result = firstNumber % secondNumber;
+                              break;
+                          }
+                          _textController.text = result.toString();
+                          operation = "";
+                        }
+                      } else {
+                        _textController.text += symbol;
+                      }
+                    },
                       child: Text(
                         lstSymbols[index],
                         style: const TextStyle(
